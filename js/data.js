@@ -76,7 +76,7 @@ window.DATA = {
         'Онлайн-заявка без визита в отделение'
       ],
       tags: ['fee0', 'grace', 'cashback'],
-      pick: false,
+      pick: true,
       popularity: 84,
       cta: 'кредитную карту URBAN CARD Кредит Европа Банка',
       url: 'https://trk.ppdu.ru/click/76nfCvTJ?erid=2SDnjdLFXE2',
@@ -98,7 +98,7 @@ window.DATA = {
         'Пополнение и погашение без комиссии'
       ],
       tags: ['fee0', 'grace'],
-      pick: true,
+      pick: false,
       popularity: 95,
       cta: 'кредитную карту «120 дней без процентов» банка Уралсиб',
       url: 'https://trk.ppdu.ru/click/21JFzU5O?erid=2SDnjbpvGx2',
@@ -142,7 +142,7 @@ window.DATA = {
         'Деньги приходят на карту круглосуточно'
       ],
       tags: ['fast', 'grace'],
-      pick: false,
+      pick: true,
       popularity: 76,
       cta: 'займ на карту в Max.Credit',
       url: 'https://trk.ppdu.ru/click/GkVIsMc3?erid=2SDnjcT1SY3',
@@ -164,7 +164,7 @@ window.DATA = {
         'Офисы более чем в 100 городах России'
       ],
       tags: ['fast'],
-      pick: true,
+      pick: false,
       popularity: 90,
       cta: 'займ в компании Быстроденьги',
       url: 'https://trk.ppdu.ru/click/g8CDc3Jj?erid=2SDnjeVLMFy',
@@ -179,21 +179,24 @@ window.DATA = {
            'picks' — тёмная плитка с горизонтальной лентой (берёт pick:true)
      tone: peach | sky | dark | coral | white                      */
   bento: [
-    { kind:'solo', offer:'keb-urban-card', tone:'peach', span:'sq',
-      eyebrow:'Рассрочка без переплаты', title:'Крупная покупка частями',
-      text:'Разбить чек на несколько месяцев у магазинов-партнёров и не отдать банку ни рубля сверху.' },
+    { kind:'solo', offer:'uralsib-120', tone:'peach', span:'sq', icon:'flame', art:true,
+      title:'Горячая кредитка', highlight:'120 дней без %',
+      sub:'Самый длинный беспроцентный период в подборке.',
+      badge:'Лучшее в подборке' },
 
-    { kind:'solo', offer:'yandex-pay-saves', tone:'coral', span:'sq',
-      eyebrow:'Деньги не лежат зря', title:'Проценты капают каждый день',
-      text:'Открыть за пару минут в приложении, снимать и пополнять когда угодно.' },
+    { kind:'solo', offer:'yandex-pay-saves', tone:'coral', span:'sq', icon:'percent',
+      title:'Деньги работают', highlight:'каждый день',
+      sub:'Проценты капают ежедневно, снять можно в любой момент.',
+      badge:'Без срока и штрафов' },
 
     { kind:'picks', tone:'dark', span:'wide',
-      eyebrow:'Чаще всего оформляют', title:'Выбор редакции',
-      text:'Три предложения, которые посетители забирают в первую очередь.' },
+      title:'Выбор редакции',
+      sub:'Три предложения, которые посетители забирают в первую очередь — по одному на категорию.' },
 
-    { kind:'solo', offer:'maxcredit-zaim', tone:'sky', span:'wide',
-      eyebrow:'Когда деньги нужны сегодня', title:'Первый займ под 0%',
-      text:'Заявка полностью онлайн без справок, решение за пять минут, деньги на карту круглосуточно.' }
+    { kind:'solo', offer:'bystrodengi-zaim', tone:'sky', span:'wide', icon:'bolt',
+      title:'Деньги на карту за', highlight:'15 минут',
+      sub:'Заявка онлайн без справок и поручителей, круглосуточно.',
+      badge:'Одобрение без визита' }
   ],
 
   /* Отзывы. Имя + город + текст. */

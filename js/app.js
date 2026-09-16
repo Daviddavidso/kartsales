@@ -108,6 +108,29 @@
     ]);
   }
 
+  /* Декоративные иконки плиток — всегда aria-hidden */
+  var ICONS = {
+    flame: 'M12 2.5c2.2 3 3 4.7 3 6.3 0 1.3-.8 2.2-1.9 2.2-1 0-1.7-.7-1.7-1.9 0-.7.2-1.3.2-1.8C9.4 8.9 7.5 11.4 7.5 14a4.5 4.5 0 0 0 9 0c0-4-2-7.4-4.5-11.5z',
+    percent: 'M6.5 5a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zm11 8.4a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zM19 5.6 6.4 19',
+    bolt: 'M13.5 2 5 13.4h5.3L9.8 22l8.7-11.6h-5.4z'
+  };
+  function tileIcon(name) {
+    var d = ICONS[name]; if (!d) return null;
+    var span = el('span', { class: 'tile__icon', 'aria-hidden': 'true' });
+    var svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('focusable', 'false');
+    var path = document.createElementNS(SVG, 'path');
+    path.setAttribute('d', d);
+    if (name === 'percent') {
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linecap', 'round');
+    } else {
+      path.setAttribute('fill', 'currentColor');
+    }
+    svg.appendChild(path); span.appendChild(svg);
+    return span;
+  }
+
   function byId(id) {
     return D.offers.filter(function (o) { return o.id === id; })[0] || null;
   }
@@ -118,7 +141,7 @@
     return el('li', {}, [
       el('article', { class: 'card', 'aria-labelledby': titleId }, [
         el('div', { class: 'card__top' }, [
-          markNode(offer, 'card__mark'),
+          markNode(offer, 'mark'),
           el('div', {}, [
             el('p', { class: 'card__bank', text: offer.bank }),
             el('h3', { class: 'card__title', id: titleId, text: offer.product })
@@ -146,10 +169,10 @@
     var titleId = 'rail-' + offer.id + '-title';
     return el('li', {}, [
       el('article', { class: 'mini', 'aria-labelledby': titleId }, [
-        el('p', { class: 'mini__bank' }, [markNode(offer, 'tile__mark'), el('span', { text: offer.bank })]),
+        el('p', { class: 'mini__bank' }, [markNode(offer, 'mark'), el('span', { text: offer.bank })]),
         el('h4', { class: 'mini__title', id: titleId, text: offer.product }),
         el('p', { class: 'mini__figure' }, [
-          valueNode(offer.benefit.value),
+          el('b', {}, [valueNode(offer.benefit.value)]),
           el('span', { text: offer.benefit.label })
         ]),
         ctaLink(offer, 'mini__cta'),
@@ -166,9 +189,10 @@
     if (cfg.kind === 'picks') {
       var picks = D.offers.filter(function (o) { return o.pick; }).slice(0, 3);
       return el('article', { class: 'tile' + tone + span, 'aria-labelledby': 'tile-picks-title' }, [
-        el('p', { class: 'tile__eyebrow', text: cfg.eyebrow }),
-        el('h3', { class: 'tile__title', id: 'tile-picks-title', text: cfg.title }),
-        el('p', { class: 'tile__text', text: cfg.text }),
+        el('div', { class: 'tile__head' }, [
+          el('h3', { class: 'tile__title', id: 'tile-picks-title', text: cfg.title }),
+          el('p', { class: 'tile__sub', text: cfg.sub })
+        ]),
         el('ul', {
           class: 'rail', role: 'group',
           'aria-label': 'Лента предложений, прокручивается по горизонтали'
@@ -179,17 +203,32 @@
     var o = byId(cfg.offer);
     if (!o) return null;
     var tid = 'tile-' + o.id + '-title';
+
+    /* заголовок: обычная часть + подсвеченная фраза внутри того же h3,
+       поэтому доступное имя плитки читается целиком одной строкой */
+    var title = el('h3', { class: 'tile__title', id: tid }, [cfg.title]);
+    if (cfg.highlight) {
+      title.appendChild(document.createTextNode(' '));
+      title.appendChild(el('span', { class: 'hl', text: cfg.highlight }));
+    }
+
     return el('article', { class: 'tile' + tone + span, 'aria-labelledby': tid }, [
-      el('p', { class: 'tile__eyebrow', text: cfg.eyebrow }),
-      el('h3', { class: 'tile__title', id: tid, text: cfg.title }),
-      el('p', { class: 'tile__text', text: cfg.text }),
-      el('p', { class: 'tile__figure' }, [
-        el('b', {}, [valueNode(o.benefit.value)]),
-        el('span', { text: o.benefit.label })
+      el('div', { class: 'tile__head' }, [
+        title,
+        cfg.sub ? el('p', { class: 'tile__sub', text: cfg.sub }) : null,
+        tileIcon(cfg.icon)
       ]),
-      el('div', { class: 'tile__foot' }, [
-        el('p', { class: 'tile__bank' }, [markNode(o, 'tile__mark'), el('span', { text: o.bank })]),
-        ctaLink(o, 'tile__cta')
+      el('div', { class: 'offerbox' }, [
+        cfg.badge ? el('p', { class: 'offerbox__badge', text: cfg.badge }) : null,
+        el('p', { class: 'offerbox__figure' }, [
+          el('b', {}, [valueNode(o.benefit.value)]),
+          el('span', { text: o.benefit.label })
+        ]),
+        el('p', { class: 'offerbox__bank' }, [
+          markNode(o, 'mark'),
+          el('span', {}, [o.bank, el('span', { class: 'offerbox__prod', text: ' · ' + o.product })])
+        ]),
+        ctaLink(o, 'offerbox__cta')
       ]),
       adLine(o, 'tile__ad')
     ]);
