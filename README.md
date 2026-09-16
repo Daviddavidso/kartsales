@@ -3,6 +3,14 @@
 Лендинг для клиента **Grigo Vaster** (заказ пришёл через Бота Буратинова, Telegram, 15.09.2026).
 Дизайн-референс из ТЗ — **aviasales.ru**: та же логика блоков, перенастроенная с билетов на банковские продукты.
 
+**Превью для клиента: https://daviddavidso.github.io/kartsales/**
+
+Обновляется пушем в `main` (GitHub Pages отдаёт статику прямо из корня ветки):
+
+```bash
+git -c credential.helper='!gh auth git-credential' push origin main
+```
+
 ## Запуск локально
 
 ```bash
