@@ -2,12 +2,14 @@
    КАРТСЕЙЛС — логика витрины
    Контракт доступности (не нарушать при правках):
    1. id генерируются из стабильного slug оффера, НЕ из индекса.
-   2. Каждый регион префиксует свои id: card- / row- / mob-.
-   3. Перерисовка — только replaceChildren внутри #picks-track,
-      #catalog-host и <tbody>. #results-status живёт СНАРУЖИ.
+   2. Каждый регион префиксует свои id: tile- / rail- / card-.
+   3. Перерисовка — только replaceChildren внутри #catalog-host.
+      #results-status живёт СНАРУЖИ перерисовываемой зоны.
    4. Фильтр (радио/селект/чипс) фокус НЕ двигает, только объявляет.
       Ссылка-навигация и submit — двигают на #results-title.
    5. aria-pressed / checked пишет только render(), не обработчики.
+   6. Имя ссылки «Оформить …» для одного оффера одинаково во всех
+      блоках — этого требует SC 3.2.4.
    ============================================================ */
 (function () {
   'use strict';
@@ -15,17 +17,15 @@
   var D = window.DATA;
   if (!D) return;
 
-  /* ---------- крошечный хелпер разметки ---------- */
+  var SVG = 'http://www.w3.org/2000/svg';
+
   function el(tag, attrs, kids) {
-    var node = tag === 'svg' || tag === 'path' || tag === 'rect'
-      ? document.createElementNS('http://www.w3.org/2000/svg', tag)
-      : document.createElement(tag);
+    var node = document.createElement(tag);
     if (attrs) {
       Object.keys(attrs).forEach(function (k) {
         var v = attrs[k];
         if (v === null || v === false || v === undefined) return;
         if (k === 'text') { node.textContent = v; return; }
-        if (k === 'class') { node.setAttribute('class', v); return; }
         node.setAttribute(k, v === true ? '' : String(v));
       });
     }
@@ -41,7 +41,7 @@
   function rubleWord(digits, hasPreposition) {
     var n = parseInt(String(digits).replace(/\D/g, ''), 10);
     var form = isNaN(n) ? 'many' : RUB_PLURAL.select(n);
-    if (hasPreposition) return form === 'one' ? 'рубля' : 'рублей';   /* «от 1 рубля», «до 5 рублей» */
+    if (hasPreposition) return form === 'one' ? 'рубля' : 'рублей';
     return form === 'one' ? 'рубль' : (form === 'few' ? 'рубля' : 'рублей');
   }
   function spoken(s) {
@@ -56,8 +56,7 @@
       .trim();
   }
   function valueNode(str, cls) {
-    var visual = String(str);
-    var voice = spoken(visual);
+    var visual = String(str), voice = spoken(visual);
     if (voice === visual) return el('span', { class: cls || null, text: visual });
     return el('span', { class: cls || null }, [
       el('span', { 'aria-hidden': 'true', text: visual }),
@@ -67,31 +66,29 @@
 
   function markNode(offer, cls) {
     return el('span', {
-      class: cls,
-      style: 'background:' + offer.color,
-      'aria-hidden': 'true',
-      text: offer.initials
+      class: cls, style: 'background:' + offer.color,
+      'aria-hidden': 'true', text: offer.initials
     });
   }
 
-  /* Иконка внешней ссылки — всегда декоративная */
   function extIcon() {
-    var svg = el('svg', { class: 'btn__ext', width: '15', height: '15', viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' });
-    var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    var svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('class', 'btn__ext');
+    svg.setAttribute('width', '15'); svg.setAttribute('height', '15');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+    var p = document.createElementNS(SVG, 'path');
     p.setAttribute('d', 'M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5');
-    p.setAttribute('fill', 'none');
-    p.setAttribute('stroke', 'currentColor');
-    p.setAttribute('stroke-width', '2');
-    p.setAttribute('stroke-linecap', 'round');
+    p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor');
+    p.setAttribute('stroke-width', '2'); p.setAttribute('stroke-linecap', 'round');
     p.setAttribute('stroke-linejoin', 'round');
     svg.appendChild(p);
     return svg;
   }
 
-  /* Имя ссылки одинаково в карточке и в таблице — требование 3.2.4 */
   function ctaLink(offer, extraClass) {
     return el('a', {
-      class: 'btn btn--amber ' + extraClass,
+      class: 'btn btn--orange ' + extraClass,
       href: offer.url,
       target: '_blank',
       rel: 'noopener nofollow sponsored'   /* без noreferrer: реферер нужен партнёрке */
@@ -111,64 +108,108 @@
     ]);
   }
 
-  /* ---------- карточка предложения ---------- */
-  function buildCard(offer, prefix) {
-    var titleId = prefix + '-' + offer.id + '-title';
+  function byId(id) {
+    return D.offers.filter(function (o) { return o.id === id; })[0] || null;
+  }
+
+  /* ---------- карточка каталога ---------- */
+  function buildCard(offer) {
+    var titleId = 'card-' + offer.id + '-title';
     return el('li', {}, [
-      el('article', { class: 'offer-card', 'aria-labelledby': titleId }, [
-        el('div', { class: 'offer-card__top' }, [
-          markNode(offer, 'offer-card__mark'),
+      el('article', { class: 'card', 'aria-labelledby': titleId }, [
+        el('div', { class: 'card__top' }, [
+          markNode(offer, 'card__mark'),
           el('div', {}, [
-            el('p', { class: 'offer-card__bank', text: offer.bank }),
-            el('h3', { class: 'offer-card__title', id: titleId, text: offer.product })
+            el('p', { class: 'card__bank', text: offer.bank }),
+            el('h3', { class: 'card__title', id: titleId, text: offer.product })
           ])
         ]),
-        el('p', { class: 'offer-card__benefit' }, [
+        el('p', { class: 'card__figure' }, [
           el('b', {}, [valueNode(offer.benefit.value)]),
           el('span', { text: offer.benefit.label })
         ]),
-        el('ul', { class: 'offer-card__features', role: 'list' },
+        el('ul', { class: 'card__list', role: 'list' },
           offer.features.map(function (f) { return el('li', { text: f }); })),
-        el('div', { class: 'offer-card__foot' }, [
-          el('p', { class: 'offer-card__price' }, [
-            el('b', {}, [valueNode(offer.price.value)]),
-            ' — ' + offer.price.label
+        el('div', { class: 'card__foot' }, [
+          el('p', { class: 'card__price' }, [
+            el('b', {}, [valueNode(offer.price.value)]), ' — ' + offer.price.label
           ]),
-          ctaLink(offer, 'offer-card__cta'),
-          adLine(offer, 'offer-card__ad')
+          ctaLink(offer, 'card__cta'),
+          adLine(offer, 'card__ad')
         ])
       ])
     ]);
   }
 
-  /* ---------- состояние ---------- */
-  var state = {
-    cat: 'all',
-    bank: 'all',
-    goal: 'all',
-    sort: 'popular',
-    tags: []
-  };
+  /* ---------- маленькая карточка в ленте тёмной плитки ---------- */
+  function buildMini(offer) {
+    var titleId = 'rail-' + offer.id + '-title';
+    return el('li', {}, [
+      el('article', { class: 'mini', 'aria-labelledby': titleId }, [
+        el('p', { class: 'mini__bank' }, [markNode(offer, 'tile__mark'), el('span', { text: offer.bank })]),
+        el('h4', { class: 'mini__title', id: titleId, text: offer.product }),
+        el('p', { class: 'mini__figure' }, [
+          valueNode(offer.benefit.value),
+          el('span', { text: offer.benefit.label })
+        ]),
+        ctaLink(offer, 'mini__cta'),
+        adLine(offer, 'mini__ad')
+      ])
+    ]);
+  }
 
+  /* ---------- бенто-плитки ---------- */
+  function buildTile(cfg) {
+    var tone = cfg.tone ? ' tile--' + cfg.tone : '';
+    var span = cfg.span === 'sq' ? ' tile--sq' : ' tile--wide';
+
+    if (cfg.kind === 'picks') {
+      var picks = D.offers.filter(function (o) { return o.pick; }).slice(0, 3);
+      return el('article', { class: 'tile' + tone + span, 'aria-labelledby': 'tile-picks-title' }, [
+        el('p', { class: 'tile__eyebrow', text: cfg.eyebrow }),
+        el('h3', { class: 'tile__title', id: 'tile-picks-title', text: cfg.title }),
+        el('p', { class: 'tile__text', text: cfg.text }),
+        el('ul', {
+          class: 'rail', role: 'group',
+          'aria-label': 'Лента предложений, прокручивается по горизонтали'
+        }, picks.map(buildMini))
+      ]);
+    }
+
+    var o = byId(cfg.offer);
+    if (!o) return null;
+    var tid = 'tile-' + o.id + '-title';
+    return el('article', { class: 'tile' + tone + span, 'aria-labelledby': tid }, [
+      el('p', { class: 'tile__eyebrow', text: cfg.eyebrow }),
+      el('h3', { class: 'tile__title', id: tid, text: cfg.title }),
+      el('p', { class: 'tile__text', text: cfg.text }),
+      el('p', { class: 'tile__figure' }, [
+        el('b', {}, [valueNode(o.benefit.value)]),
+        el('span', { text: o.benefit.label })
+      ]),
+      el('div', { class: 'tile__foot' }, [
+        el('p', { class: 'tile__bank' }, [markNode(o, 'tile__mark'), el('span', { text: o.bank })]),
+        ctaLink(o, 'tile__cta')
+      ]),
+      adLine(o, 'tile__ad')
+    ]);
+  }
+
+  /* ---------- состояние ---------- */
+  var state = { cat: 'all', bank: 'all', goal: 'all', sort: 'popular', tags: [] };
   var CAT_IDS = D.categories.map(function (c) { return c.id; });
   var TAG_IDS = D.tags.map(function (t) { return t.id; });
 
   function readUrl() {
     try {
       var q = new URLSearchParams(location.search);
-      var cat = q.get('cat');
-      if (cat && CAT_IDS.indexOf(cat) > -1) state.cat = cat;
-      var bank = q.get('bank');
-      if (bank) state.bank = bank;
-      var goal = q.get('goal');
-      if (goal && (goal === 'all' || TAG_IDS.indexOf(goal) > -1)) state.goal = goal;
-      var sort = q.get('sort');
-      if (sort && ['popular', 'free', 'bank'].indexOf(sort) > -1) state.sort = sort;
+      var cat = q.get('cat');  if (cat && CAT_IDS.indexOf(cat) > -1) state.cat = cat;
+      var bank = q.get('bank'); if (bank) state.bank = bank;
+      var goal = q.get('goal'); if (goal && (goal === 'all' || TAG_IDS.indexOf(goal) > -1)) state.goal = goal;
+      var sort = q.get('sort'); if (sort && ['popular', 'free', 'bank'].indexOf(sort) > -1) state.sort = sort;
       var tags = q.get('tags');
-      if (tags) {
-        state.tags = tags.split(',').filter(function (t) { return TAG_IDS.indexOf(t) > -1; });
-      }
-    } catch (e) { /* file:// или старый браузер — просто дефолты */ }
+      if (tags) state.tags = tags.split(',').filter(function (t) { return TAG_IDS.indexOf(t) > -1; });
+    } catch (e) { /* дефолты */ }
   }
 
   /* 3.3.7: состояние живёт в адресе, перезагрузка ничего не теряет */
@@ -194,17 +235,14 @@
       if (state.cat !== 'all' && o.category !== state.cat) return false;
       if (state.bank !== 'all' && o.bank !== state.bank) return false;
       if (state.goal !== 'all' && o.tags.indexOf(state.goal) < 0) return false;
-      for (var i = 0; i < state.tags.length; i++) {
-        if (o.tags.indexOf(state.tags[i]) < 0) return false;
-      }
+      for (var i = 0; i < state.tags.length; i++) if (o.tags.indexOf(state.tags[i]) < 0) return false;
       return true;
     });
     if (state.sort === 'bank') {
       list.sort(function (a, b) { return a.bank.localeCompare(b.bank, 'ru'); });
     } else if (state.sort === 'free') {
       list.sort(function (a, b) {
-        var af = a.tags.indexOf('fee0') > -1 ? 0 : 1;
-        var bf = b.tags.indexOf('fee0') > -1 ? 0 : 1;
+        var af = a.tags.indexOf('fee0') > -1 ? 0 : 1, bf = b.tags.indexOf('fee0') > -1 ? 0 : 1;
         return af - bf || b.popularity - a.popularity;
       });
     } else {
@@ -217,13 +255,10 @@
   var PLURAL = new Intl.PluralRules('ru-RU');
   var FORMS = { one: 'предложение', few: 'предложения', many: 'предложений', other: 'предложения' };
   function offersWord(n) { return FORMS[PLURAL.select(n)] || FORMS.other; }
-
   function countPhrase(n) {
-    return n === 0
-      ? 'Ничего не найдено. Попробуйте изменить фильтры.'
-      : 'Найдено ' + n + ' ' + offersWord(n);
+    return n === 0 ? 'Ничего не найдено. Попробуйте изменить фильтры.'
+                   : 'Найдено ' + n + ' ' + offersWord(n);
   }
-
   function statusText(n) {
     if (n === 0) return countPhrase(0);
     var bits = [];
@@ -252,91 +287,23 @@
     }, 500);
   }
 
-  /* ---------- таблица ---------- */
-  function buildTable(list) {
-    var thead = el('thead', {}, [
-      el('tr', {}, [
-        el('th', { scope: 'col', text: 'Продукт' }),
-        el('th', { scope: 'col', text: 'Банк или МФО' }),
-        el('th', { scope: 'col', text: 'Выгода' }),
-        el('th', { scope: 'col', text: 'Стоимость' }),
-        el('th', { scope: 'col' }, [el('span', { class: 'visually-hidden', text: 'Оформление' })])
-      ])
-    ]);
-
-    var tbody = el('tbody', { id: 'compare-tbody' });
-    if (!list.length) {
-      var td = el('td', { colspan: '5', class: 'compare__empty' }, [
-        'По выбранным фильтрам ничего не нашлось. Попробуйте другую категорию или сбросьте фильтры.',
-        el('br'),
-        el('button', { type: 'button', class: 'btn btn--blue', 'data-reset': 'true', text: 'Сбросить фильтры' })
-      ]);
-      tbody.appendChild(el('tr', {}, [td]));
-    } else {
-      list.forEach(function (o) {
-        tbody.appendChild(el('tr', {}, [
-          el('th', { scope: 'row', text: o.product }),
-          el('td', {}, [
-            el('span', { class: 'compare__bankline' }, [
-              markNode(o, 'compare__mark'),
-              el('span', { text: o.bank })
-            ])
-          ]),
-          el('td', {}, [
-            valueNode(o.benefit.value, 'compare__value'),
-            el('span', { class: 'compare__label', text: o.benefit.label })
-          ]),
-          el('td', {}, [
-            valueNode(o.price.value, 'compare__value'),
-            el('span', { class: 'compare__label', text: o.price.label })
-          ]),
-          el('td', {}, [
-            ctaLink(o, 'compare__cta'),
-            adLine(o, 'compare__ad')
-          ])
-        ]));
-      });
-    }
-
-    var table = el('table', { class: 'compare' }, [
-      el('caption', {}, [
-        el('span', {
-          class: 'visually-hidden',
-          text: 'Продукт, банк, выгода, стоимость обслуживания и переход к оформлению. Состав строк меняется при выборе категории и быстрых фильтров.'
-        })
-      ]),
-      thead,
-      tbody
-    ]);
-
-    return el('div', { class: 'table-scroll', role: 'group', 'aria-label': 'Таблица сравнения предложений', tabindex: '0' }, [table]);
-  }
-
-  /* ---------- карточный вид каталога (узкие экраны) ---------- */
-  function buildCardList(list) {
-    if (!list.length) {
-      return el('div', { class: 'compare__empty' }, [
-        'По выбранным фильтрам ничего не нашлось. Попробуйте другую категорию или сбросьте фильтры.',
-        el('br'),
-        el('button', { type: 'button', class: 'btn btn--blue', 'data-reset': 'true', text: 'Сбросить фильтры' })
-      ]);
-    }
-    return el('ul', { class: 'catalog__cards', role: 'list' },
-      list.map(function (o) { return buildCard(o, 'mob'); }));
-  }
-
-  /* ---------- отрисовка ---------- */
-  var mqCards = window.matchMedia('(max-width: 47.9em)');
+  /* ---------- отрисовка каталога ---------- */
   var host = document.getElementById('catalog-host');
-  var lastList = [];
+
+  function buildGrid(list) {
+    if (!list.length) {
+      return el('div', { class: 'empty' }, [
+        'По выбранным фильтрам ничего не нашлось. Попробуйте другую категорию или сбросьте фильтры.',
+        el('div', {}, [el('button', { type: 'button', class: 'btn btn--ghost', 'data-reset': 'true', text: 'Сбросить фильтры' })])
+      ]);
+    }
+    return el('ul', { class: 'grid', role: 'list' }, list.map(buildCard));
+  }
 
   function renderCatalog(list, withAnnounce) {
     var before = document.activeElement;
-    lastList = list;
-    host.replaceChildren(mqCards.matches ? buildCardList(list) : buildTable(list));
+    host.replaceChildren(buildGrid(list));
     if (withAnnounce) announce(statusText(list.length));
-
-    /* защита разработчика: фокус не должен улетать в body */
     if (window.queueMicrotask) {
       queueMicrotask(function () {
         if (document.activeElement === document.body && before && before !== document.body) {
@@ -349,27 +316,21 @@
   function syncControls() {
     var radio = document.getElementById('cat-' + state.cat);
     if (radio) radio.checked = true;
-    var bankSel = document.getElementById('f-bank');
-    if (bankSel) bankSel.value = state.bank;
-    var goalSel = document.getElementById('f-goal');
-    if (goalSel) goalSel.value = state.goal;
-    var sortSel = document.getElementById('f-sort');
-    if (sortSel) sortSel.value = state.sort;
-
+    ['f-bank:bank', 'f-goal:goal', 'f-sort:sort'].forEach(function (pair) {
+      var p = pair.split(':'), sel = document.getElementById(p[0]);
+      if (sel) sel.value = state[p[1]];
+    });
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-tag]'), function (btn) {
       btn.setAttribute('aria-pressed', state.tags.indexOf(btn.dataset.tag) > -1 ? 'true' : 'false');
     });
     var resetBtn = document.querySelector('.chip--reset');
     if (resetBtn) resetBtn.hidden = isDefault();
 
-    Array.prototype.forEach.call(document.querySelectorAll('.cat-tile'), function (tile) {
+    Array.prototype.forEach.call(document.querySelectorAll('.cat'), function (tile) {
       var link = tile.querySelector('a[data-cat]');
       var on = !!link && link.dataset.cat === state.cat;
       tile.setAttribute('data-current', on ? 'true' : 'false');
-      if (link) {
-        if (on) link.setAttribute('aria-current', 'true');
-        else link.removeAttribute('aria-current');
-      }
+      if (link) { if (on) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current'); }
     });
   }
 
@@ -388,12 +349,10 @@
     }
   }
 
-  /* ---------- первичная сборка статичных блоков ---------- */
+  /* ---------- статичные блоки ---------- */
 
-  // селект банков
-  (function () {
-    var sel = document.getElementById('f-bank');
-    var seen = {};
+  (function () {                       // селект банков
+    var sel = document.getElementById('f-bank'), seen = {};
     D.offers.forEach(function (o) {
       if (seen[o.bank]) return;
       seen[o.bank] = true;
@@ -401,8 +360,7 @@
     });
   })();
 
-  // чипсы
-  (function () {
+  (function () {                       // чипсы
     var box = document.getElementById('chips');
     D.tags.forEach(function (t) {
       box.appendChild(el('button', {
@@ -414,15 +372,13 @@
     }));
   })();
 
-  // выбор редакции — не фильтруется, отдельная задача блока
-  (function () {
-    var track = document.getElementById('picks-track');
-    var picks = D.offers.filter(function (o) { return o.pick; }).slice(0, 3);
-    track.replaceChildren.apply(track, picks.map(function (o) { return buildCard(o, 'card'); }));
+  (function () {                       // бенто (не фильтруется — отдельная задача блока)
+    var box = document.getElementById('bento');
+    var tiles = (D.bento || []).map(buildTile).filter(Boolean);
+    box.replaceChildren.apply(box, tiles);
   })();
 
-  // отзывы
-  (function () {
+  (function () {                       // отзывы
     var grid = document.getElementById('reviews-grid');
     grid.replaceChildren.apply(grid, (D.reviews || []).map(function (r) {
       return el('li', {}, [
@@ -434,8 +390,7 @@
     }));
   })();
 
-  // FAQ — нативный details/summary, без ARIA-надстроек
-  (function () {
+  (function () {                       // FAQ — нативный details/summary, без ARIA-надстроек
     var box = document.getElementById('faq-list');
     box.replaceChildren.apply(box, (D.faq || []).map(function (item) {
       return el('details', { class: 'faq__item' }, [
@@ -445,27 +400,28 @@
     }));
   })();
 
-  // даты
-  (function () {
+  (function () {                       // даты
     var u = document.getElementById('updated-at');
     if (u && D.updatedAt) u.textContent = D.updatedAt;
     var y = document.getElementById('year');
     if (y) y.textContent = String(new Date().getFullYear());
   })();
 
-  /* ---------- обработчики фильтров ---------- */
+  /* ---------- фильтры ---------- */
 
-  document.getElementById('picker').addEventListener('change', function (e) {
+  var picker = document.getElementById('picker');
+
+  picker.addEventListener('change', function (e) {
     var t = e.target;
     if (t.name === 'category') state.cat = t.value;
     else if (t.id === 'f-bank') state.bank = t.value;
     else if (t.id === 'f-goal') state.goal = t.value;
     else if (t.id === 'f-sort') state.sort = t.value;
     else return;
-    apply();                       // фокус не трогаем — 3.2.2
+    apply();                            // фокус не трогаем — 3.2.2
   });
 
-  document.getElementById('picker').addEventListener('submit', function (e) {
+  picker.addEventListener('submit', function (e) {
     e.preventDefault();
     apply({ focusResults: true });
   });
@@ -473,13 +429,7 @@
   document.getElementById('chips').addEventListener('click', function (e) {
     var btn = e.target.closest('button');
     if (!btn) return;
-    if (btn.dataset.reset) {
-      state.cat = 'all'; state.bank = 'all'; state.goal = 'all'; state.tags = [];
-      syncControls(); writeUrl();
-      renderCatalog(filtered(), false);
-      announce('Фильтры сброшены. ' + countPhrase(filtered().length));
-      return;
-    }
+    if (btn.dataset.reset) { resetAll(false); return; }
     var tag = btn.dataset.tag;
     if (!tag) return;
     var i = state.tags.indexOf(tag);
@@ -487,30 +437,29 @@
     apply();
   });
 
-  // «Сбросить фильтры» из пустого состояния — оно внутри перерисовываемой зоны,
-  // поэтому фокус уводим явно, иначе он упадёт в body
-  host.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-reset]');
-    if (!btn) return;
+  function resetAll(moveFocus) {
     state.cat = 'all'; state.bank = 'all'; state.goal = 'all'; state.tags = [];
     syncControls(); writeUrl();
     renderCatalog(filtered(), false);
-    var t = document.getElementById('results-title');
-    t.focus({ preventScroll: true });
+    if (moveFocus) document.getElementById('results-title').focus({ preventScroll: true });
     announce('Фильтры сброшены. ' + countPhrase(filtered().length));
-  });
+  }
 
-  mqCards.addEventListener('change', function () { renderCatalog(lastList, false); });
+  // кнопка сброса из пустого состояния живёт ВНУТРИ перерисовываемой зоны,
+  // поэтому фокус уводим явно — иначе он упадёт в body
+  host.addEventListener('click', function (e) {
+    if (!e.target.closest('[data-reset]')) return;
+    resetAll(true);
+  });
 
   /* ---------- ссылки-категории (шапка, плитки, подвал) ---------- */
   document.addEventListener('click', function (e) {
     var link = e.target.closest('a[data-cat]');
     if (!link) return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;  // не ломаем открытие в новой вкладке
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;   // не ломаем «открыть в новой вкладке»
     e.preventDefault();
     state.cat = link.dataset.cat;
-    var inDialog = !!link.closest('dialog');
-    if (inDialog) {
+    if (link.closest('dialog')) {
       pendingFocus = document.getElementById('results-title');
       closeNav();
       apply();
@@ -522,8 +471,7 @@
   /* ---------- мобильное меню ---------- */
   var panel = document.getElementById('mobile-nav');
   var navToggle = document.getElementById('nav-toggle');
-  var lastTrigger = null;
-  var pendingFocus = null;
+  var lastTrigger = null, pendingFocus = null;
 
   function openNav() {
     var act = document.activeElement;
@@ -531,8 +479,7 @@
     if (typeof panel.showModal === 'function') panel.showModal();
     else panel.setAttribute('open', '');
     document.documentElement.classList.add('is-locked');
-    var inner = panel.querySelector('.mobile-nav__inner');
-    inner.focus({ preventScroll: true });
+    panel.querySelector('.mobile-nav__inner').focus({ preventScroll: true });
   }
   function closeNav() {
     if (typeof panel.close === 'function' && panel.open) panel.close();
@@ -550,10 +497,7 @@
       return;
     }
     pendingFocus = null;
-    if (lastTrigger && document.contains(lastTrigger) && lastTrigger.offsetParent !== null) {
-      lastTrigger.focus();
-      return;
-    }
+    if (lastTrigger && document.contains(lastTrigger) && lastTrigger.offsetParent !== null) { lastTrigger.focus(); return; }
     document.getElementById('main').focus();
   }
 
@@ -567,10 +511,7 @@
   });
   panel.addEventListener('click', function (e) {
     if (e.target.closest('[data-close]')) { closeNav(); return; }
-    if (e.target === panel) closeNav();            // клик по подложке
-  });
-  // обычные якоря внутри меню тоже закрывают его и уводят фокус к цели
-  panel.addEventListener('click', function (e) {
+    if (e.target === panel) { closeNav(); return; }            // клик по подложке
     var a = e.target.closest('a[href^="#"]');
     if (!a || a.dataset.cat) return;
     var target = document.querySelector(a.getAttribute('href'));
@@ -581,9 +522,8 @@
     closeNav();
   });
 
-  /* поворот экрана / растягивание окна при открытом меню — иначе фокус падает в body */
-  var mqNarrow = window.matchMedia('(max-width: 56.25em)');
-  mqNarrow.addEventListener('change', function (e) {
+  /* поворот экрана при открытом меню — иначе фокус падает в body, а блокировка скролла остаётся */
+  window.matchMedia('(max-width: 56.25em)').addEventListener('change', function (e) {
     if (e.matches) return;
     pendingFocus = null; lastTrigger = null;
     if (panel.open) closeNav();
@@ -601,19 +541,16 @@
     var busy = false;
 
     function showError(msg) {
-      errBox.textContent = msg;
-      errBox.hidden = false;
+      errBox.textContent = msg; errBox.hidden = false;
       input.setAttribute('aria-invalid', 'true');
       input.setAttribute('aria-describedby', 'sub-error sub-hint');
       input.focus();
     }
     function clearError() {
-      errBox.hidden = true;
-      errBox.textContent = '';
+      errBox.hidden = true; errBox.textContent = '';
       input.removeAttribute('aria-invalid');
       input.setAttribute('aria-describedby', 'sub-hint');
     }
-
     input.addEventListener('input', function () {
       if (input.hasAttribute('aria-invalid')) clearError();
     });
@@ -621,8 +558,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (busy) return;
-      okBox.textContent = '';
-      alertBox.textContent = '';
+      okBox.textContent = ''; alertBox.textContent = '';
 
       var v = input.value.trim();
       if (!v) { showError('Введите адрес электронной почты.'); return; }
@@ -633,9 +569,9 @@
       clearError();
 
       busy = true;
-      btn.setAttribute('aria-disabled', 'true');   // не disabled: фокус на кнопке
-      // Бэкенда пока нет — заявку сохраняем локально и показываем подтверждение.
-      // Когда появится обработчик (api.php / форма партнёрки), заменить этот блок на fetch().
+      btn.setAttribute('aria-disabled', 'true');   // не disabled: фокус остаётся на кнопке
+      // Бэкенда пока нет — заявку кладём локально и показываем подтверждение.
+      // Когда появится обработчик (api.php / форма партнёрки), заменить на fetch().
       setTimeout(function () {
         busy = false;
         btn.removeAttribute('aria-disabled');
