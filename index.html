@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0b2545">
+<title>КартСейлс — подбор банковских карт, вкладов и займов</title>
+<meta name="description" content="Сравните дебетовые и кредитные карты, вклады и займы от банков и МФО в одной таблице: кешбэк, льготный период, стоимость обслуживания и срок рассмотрения заявки.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b63ce'/%3E%3Crect x='6' y='10' width='20' height='13' rx='2.5' fill='%23ffcc00'/%3E%3Crect x='6' y='14' width='20' height='3' fill='%230b2545'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Перейти к основному содержанию</a>
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+
+    <a class="logo" href="#main">
+      <svg class="logo__mark" width="34" height="34" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect width="32" height="32" rx="8" fill="#0b63ce"></rect>
+        <rect x="6" y="10" width="20" height="13" rx="2.5" fill="#ffcc00"></rect>
+        <rect x="6" y="14" width="20" height="3" fill="#0b2545"></rect>
+        <circle cx="22" cy="20" r="1.6" fill="#0b2545"></circle>
+      </svg>
+      <span class="logo__text">карт<b>сейлс</b></span>
+    </a>
+
+    <nav class="site-nav" aria-label="Основная навигация">
+      <ul class="site-nav__list" role="list">
+        <li><a href="?cat=debit#catalog" data-cat="debit">Дебетовые карты</a></li>
+        <li><a href="?cat=credit#catalog" data-cat="credit">Кредитные карты</a></li>
+        <li><a href="?cat=deposit#catalog" data-cat="deposit">Вклады</a></li>
+        <li><a href="?cat=loan#catalog" data-cat="loan">Займы</a></li>
+        <li><a href="#faq">Вопросы</a></li>
+      </ul>
+    </nav>
+
+    <a class="btn btn--amber site-header__cta" href="#picker">Подобрать продукт</a>
+
+    <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Меню" aria-haspopup="dialog">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
+      </svg>
+    </button>
+
+  </div>
+</header>
+
+<dialog id="mobile-nav" class="mobile-nav" aria-labelledby="mobile-nav-title">
+  <div class="mobile-nav__inner" tabindex="-1">
+    <div class="mobile-nav__head">
+      <h2 id="mobile-nav-title">Меню</h2>
+      <button type="button" class="mobile-nav__close" data-close aria-label="Закрыть меню">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
+        </svg>
+      </button>
+    </div>
+    <nav aria-label="Мобильное меню">
+      <ul class="mobile-nav__list" role="list">
+        <li><a href="?cat=debit#catalog" data-cat="debit">Дебетовые карты</a></li>
+        <li><a href="?cat=credit#catalog" data-cat="credit">Кредитные карты</a></li>
+        <li><a href="?cat=deposit#catalog" data-cat="deposit">Вклады</a></li>
+        <li><a href="?cat=loan#catalog" data-cat="loan">Займы</a></li>
+        <li><a href="#faq">Вопросы</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn--amber mobile-nav__cta" href="#picker">Подобрать продукт</a>
+  </div>
+</dialog>
+
+<main id="main" tabindex="-1">
+
+  <!-- ══════════ ГЕРОЙ + ПОИСКОВЫЙ ВИДЖЕТ ══════════ -->
+  <section class="hero">
+    <div class="wrap hero__inner">
+
+      <p class="hero__eyebrow">Банки и МФО в одном окне</p>
+      <h1 class="hero__title">Карты, вклады и займы&nbsp;— сравнили за&nbsp;вас</h1>
+      <p class="hero__lead">Шесть проверенных предложений с открытыми условиями. Смотрите кешбэк, льготный период и стоимость обслуживания рядом, а не в десяти вкладках.</p>
+
+      <form id="picker" class="picker" role="search" aria-labelledby="picker-title" novalidate>
+        <h2 id="picker-title" class="visually-hidden">Подбор финансового продукта</h2>
+
+        <fieldset class="picker__types">
+          <legend class="visually-hidden">Тип продукта</legend>
+          <span class="picker__item">
+            <input class="picker__radio" type="radio" name="category" id="cat-all" value="all" checked>
+            <label class="picker__type" for="cat-all">Все продукты</label>
+          </span>
+          <span class="picker__item">
+            <input class="picker__radio" type="radio" name="category" id="cat-debit" value="debit">
+            <label class="picker__type" for="cat-debit">Дебетовые карты</label>
+          </span>
+          <span class="picker__item">
+            <input class="picker__radio" type="radio" name="category" id="cat-credit" value="credit">
+            <label class="picker__type" for="cat-credit">Кредитные карты</label>
+          </span>
+          <span class="picker__item">
+            <input class="picker__radio" type="radio" name="category" id="cat-deposit" value="deposit">
+            <label class="picker__type" for="cat-deposit">Вклады</label>
+          </span>
+          <span class="picker__item">
+            <input class="picker__radio" type="radio" name="category" id="cat-loan" value="loan">
+            <label class="picker__type" for="cat-loan">Займы</label>
+          </span>
+        </fieldset>
+
+        <div class="picker__panel">
+          <div class="picker__fields">
+
+            <p class="field">
+              <label class="field__label" for="f-bank">Банк или МФО</label>
+              <select class="field__control" id="f-bank" name="bank">
+                <option value="all">Любой</option>
+              </select>
+            </p>
+
+            <p class="field">
+              <label class="field__label" for="f-goal">Что важно</label>
+              <select class="field__control" id="f-goal" name="goal">
+                <option value="all">Не важно</option>
+                <option value="cashback">Кешбэк</option>
+                <option value="grace">Без процентов</option>
+                <option value="income">Доход на остаток</option>
+                <option value="fast">Быстрые деньги</option>
+              </select>
+            </p>
+
+            <p class="field">
+              <label class="field__label" for="f-sort">Сортировка</label>
+              <select class="field__control" id="f-sort" name="sort">
+                <option value="popular">По популярности</option>
+                <option value="free">Сначала без платы</option>
+                <option value="bank">По названию банка</option>
+              </select>
+            </p>
+
+          </div>
+
+          <button type="submit" class="btn btn--amber picker__submit">Подобрать</button>
+        </div>
+      </form>
+
+      <h3 id="chips-title" class="visually-hidden">Быстрый выбор</h3>
+      <div class="chips" role="group" aria-labelledby="chips-title" id="chips"></div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ ВЫБОР РЕДАКЦИИ ══════════ -->
+  <section class="section picks" aria-labelledby="picks-title">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="picks-title" class="section__title">Выбор редакции</h2>
+        <p class="section__sub">Три предложения, которые чаще всего оформляют посетители сайта.</p>
+      </div>
+    </div>
+
+    <div class="offers-scroller" id="picks-scroller" role="group" aria-label="Лента предложений, прокручивается по горизонтали">
+      <div class="wrap wrap--flush">
+        <ul class="offers-track" id="picks-track" role="list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ КАТАЛОГ ══════════ -->
+  <section class="section catalog" id="catalog" aria-labelledby="results-title">
+    <div class="wrap">
+
+      <div class="section__head results__head">
+        <h2 id="results-title" class="section__title" tabindex="-1">Все предложения</h2>
+        <p id="results-status" class="results__count" role="status" aria-live="polite" aria-atomic="true">Найдено 6 предложений</p>
+      </div>
+
+      <div id="catalog-host" class="catalog__host"></div>
+
+      <noscript>
+        <ul class="noscript-list" role="list">
+          <li><a href="https://trk.ppdu.ru/click/8iQZQ0GX?erid=2SDnjdMsAhh" target="_blank" rel="noopener nofollow sponsored">Оформить дебетовую карту «Твой кешбэк» ПСБ (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjdMsAhh</span></li>
+          <li><a href="https://trk.ppdu.ru/click/76nfCvTJ?erid=2SDnjdLFXE2" target="_blank" rel="noopener nofollow sponsored">Оформить кредитную карту URBAN CARD Кредит Европа Банка (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjdLFXE2</span></li>
+          <li><a href="https://trk.ppdu.ru/click/21JFzU5O?erid=2SDnjbpvGx2" target="_blank" rel="noopener nofollow sponsored">Оформить кредитную карту «120 дней без процентов» банка Уралсиб (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjbpvGx2</span></li>
+          <li><a href="https://trk.ppdu.ru/click/K8C6nELx?erid=2SDnjck9Tog" target="_blank" rel="noopener nofollow sponsored">Оформить вклад «Сейвы» в Яндекс Пэй (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjck9Tog</span></li>
+          <li><a href="https://trk.ppdu.ru/click/GkVIsMc3?erid=2SDnjcT1SY3" target="_blank" rel="noopener nofollow sponsored">Оформить займ на карту в Max.Credit (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjcT1SY3</span></li>
+          <li><a href="https://trk.ppdu.ru/click/g8CDc3Jj?erid=2SDnjeVLMFy" target="_blank" rel="noopener nofollow sponsored">Оформить займ в компании Быстроденьги (откроется в новой вкладке)</a> — реклама, erid: <span translate="no">2SDnjeVLMFy</span></li>
+        </ul>
+      </noscript>
+
+      <p class="catalog__note">Условия приведены по данным партнёров на <span id="updated-at">16 сентября 2026</span> года и могут измениться. Точные тарифы, ставку и полную стоимость кредита смотрите на сайте банка или МФО.</p>
+
+    </div>
+  </section>
+
+  <!-- ══════════ КАТЕГОРИИ ══════════ -->
+  <section class="section cats">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="cats-title" class="section__title">С чего начать</h2>
+        <p class="section__sub">Выберите задачу — витрина ниже перестроится под неё.</p>
+      </div>
+
+      <ul class="cats__grid" role="list">
+        <li class="cat-tile cat-tile--debit">
+          <h3 class="cat-tile__title"><a href="?cat=debit#catalog" data-cat="debit">Дебетовые карты</a></h3>
+          <p class="cat-tile__text">Кешбэк за покупки, бесплатное обслуживание и снятие наличных без комиссии.</p>
+          <svg class="cat-tile__icon" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"></rect><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"></path></svg>
+        </li>
+        <li class="cat-tile cat-tile--credit">
+          <h3 class="cat-tile__title"><a href="?cat=credit#catalog" data-cat="credit">Кредитные карты</a></h3>
+          <p class="cat-tile__text">Льготный период до 120 дней и рассрочка у магазинов-партнёров.</p>
+          <svg class="cat-tile__icon" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"></rect><path d="M6 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        </li>
+        <li class="cat-tile cat-tile--deposit">
+          <h3 class="cat-tile__title"><a href="?cat=deposit#catalog" data-cat="deposit">Вклады и счета</a></h3>
+          <p class="cat-tile__text">Доход на остаток с ежедневным начислением и снятием в любой момент.</p>
+          <svg class="cat-tile__icon" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20V10M9 20V6M14 20v-8M19 20V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        </li>
+        <li class="cat-tile cat-tile--loan">
+          <h3 class="cat-tile__title"><a href="?cat=loan#catalog" data-cat="loan">Займы</a></h3>
+          <p class="cat-tile__text">Деньги на карту круглосуточно, решение по заявке за несколько минут.</p>
+          <svg class="cat-tile__icon" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 7.5v9M9.5 10h5M9.5 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════ КАК ЭТО РАБОТАЕТ ══════════ -->
+  <section class="section how">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="how-title" class="section__title">Как это работает</h2>
+      </div>
+      <ol class="how__list" role="list">
+        <li class="how__step">
+          <p class="how__num" aria-hidden="true">1</p>
+          <h3 class="how__title">Выбираете задачу</h3>
+          <p class="how__text">Отмечаете тип продукта и то, что для вас важнее: кешбэк, длинный льготный период или скорость.</p>
+        </li>
+        <li class="how__step">
+          <p class="how__num" aria-hidden="true">2</p>
+          <h3 class="how__title">Сравниваете условия</h3>
+          <p class="how__text">Витрина показывает подходящие предложения в одной таблице — без мелкого шрифта и звонков менеджеру.</p>
+        </li>
+        <li class="how__step">
+          <p class="how__num" aria-hidden="true">3</p>
+          <h3 class="how__title">Оформляете у партнёра</h3>
+          <p class="how__text">Нажимаете «Оформить» и заполняете заявку на сайте банка или МФО. Решение принимает организация, а не мы.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ══════════ ПРЕИМУЩЕСТВА ══════════ -->
+  <section class="section why">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="why-title" class="section__title">Почему КартСейлс</h2>
+      </div>
+      <ul class="why__grid" role="list">
+        <li class="why__item">
+          <h3 class="why__title">Бесплатно для вас</h3>
+          <p class="why__text">Мы зарабатываем на партнёрских выплатах от банков. Ваши условия от этого не меняются, комиссию сервис не берёт.</p>
+        </li>
+        <li class="why__item">
+          <h3 class="why__title">Только действующие предложения</h3>
+          <p class="why__text">В витрине нет «карт-призраков». Каждая позиция ведёт на актуальную страницу заявки партнёра.</p>
+        </li>
+        <li class="why__item">
+          <h3 class="why__title">Честная пометка рекламы</h3>
+          <p class="why__text">Под каждым предложением открыто указан erid — идентификатор из единого реестра интернет-рекламы.</p>
+        </li>
+        <li class="why__item">
+          <h3 class="why__title">Ничего лишнего не спрашиваем</h3>
+          <p class="why__text">Сайт не собирает паспортные данные и не звонит. Анкету вы заполняете напрямую у банка или МФО.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════ ОТЗЫВЫ ══════════ -->
+  <section class="section reviews">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="reviews-title" class="section__title">Отзывы посетителей</h2>
+      </div>
+      <ul class="reviews__grid" id="reviews-grid" role="list"></ul>
+    </div>
+  </section>
+
+  <!-- ══════════ FAQ ══════════ -->
+  <section class="section faq" id="faq">
+    <div class="wrap">
+      <div class="section__head">
+        <h2 id="faq-title" class="section__title">Частые вопросы</h2>
+      </div>
+      <div class="faq__list" id="faq-list"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ ПОДПИСКА ══════════ -->
+  <section class="section sub">
+    <div class="wrap wrap--narrow">
+      <form id="sub-form" class="sub__form" aria-labelledby="sub-title" novalidate>
+        <h2 id="sub-title" class="section__title">Новые предложения — на почту</h2>
+        <p class="sub__lead">Присылаем письмо, когда в витрине появляется карта или вклад с условиями лучше текущих.</p>
+
+        <div class="sub__row">
+          <p class="field field--grow">
+            <label class="field__label" for="sub-email">Электронная почта</label>
+            <input class="field__control" id="sub-email" name="email" type="email"
+                   autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="off"
+                   required aria-describedby="sub-hint" placeholder="ivan@example.com">
+          </p>
+          <button type="submit" class="btn btn--blue sub__btn" id="sub-btn">Подписаться</button>
+        </div>
+
+        <p id="sub-hint" class="sub__hint">Не чаще одного письма в неделю. Отписка — в один клик из любого письма.</p>
+        <p id="sub-error" class="field-error" hidden></p>
+        <p id="sub-status" class="sub__status" role="status"></p>
+        <p id="sub-alert" class="sub__alert" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <h2 class="visually-hidden">Информация о сайте</h2>
+
+    <div class="site-footer__cols">
+      <div class="site-footer__brand">
+        <span class="logo logo--footer">
+          <svg class="logo__mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <rect width="32" height="32" rx="8" fill="#ffffff"></rect>
+            <rect x="6" y="10" width="20" height="13" rx="2.5" fill="#ffcc00"></rect>
+            <rect x="6" y="14" width="20" height="3" fill="#0b2545"></rect>
+          </svg>
+          <span class="logo__text">карт<b>сейлс</b></span>
+        </span>
+        <p class="site-footer__tagline">Витрина банковских карт, вкладов и займов. Сравниваем условия, решение принимает банк.</p>
+      </div>
+
+      <nav class="site-footer__col" aria-label="Навигация в подвале">
+        <h3 class="site-footer__title">Продукты</h3>
+        <ul role="list">
+          <li><a href="?cat=debit#catalog" data-cat="debit">Дебетовые карты</a></li>
+          <li><a href="?cat=credit#catalog" data-cat="credit">Кредитные карты</a></li>
+          <li><a href="?cat=deposit#catalog" data-cat="deposit">Вклады и счета</a></li>
+          <li><a href="?cat=loan#catalog" data-cat="loan">Займы</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__title">Помощь</h3>
+        <ul role="list">
+          <li><a href="#faq">Частые вопросы о сервисе</a></li>
+          <li><a href="#picker">Подобрать продукт заново</a></li>
+          <li><a href="mailto:info@example.ru">Написать нам: info@example.ru</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__title">Документы</h3>
+        <ul role="list">
+          <li><a href="https://www.cbr.ru/microfinance/registry/" target="_blank" rel="noopener">Реестр МФО на сайте Банка России (откроется в новой вкладке)</a></li>
+          <li><a href="https://www.cbr.ru/banking_sector/credit/" target="_blank" rel="noopener">Справочник кредитных организаций Банка России (откроется в новой вкладке)</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__legal">
+      <p>Сайт не является кредитной организацией, банком или микрофинансовой организацией, не выдаёт займы и не принимает вклады. Информация носит справочный характер и не является публичной офертой. Решение о выдаче карты, открытии вклада или предоставлении займа принимает соответствующая организация.</p>
+      <p>Займы предоставляют микрофинансовые организации, включённые в государственный реестр Банка России. Полная стоимость займа, процентная ставка и условия досрочного погашения указаны на сайте кредитора. Обращаем внимание: несвоевременное погашение задолженности может привести к начислению неустойки и ухудшению кредитной истории.</p>
+      <p class="site-footer__copy">© <span id="year">2026</span> КартСейлс. Все размещённые предложения являются рекламой, идентификатор erid указан под каждым из них.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
