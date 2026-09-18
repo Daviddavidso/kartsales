@@ -1,5 +1,5 @@
 /* ============================================================
-   КАРТСЕЙЛС — логика витрины
+   ФИНСЕЙЛС — логика витрины
    Контракт доступности (не нарушать при правках):
    1. id генерируются из стабильного slug оффера, НЕ из индекса.
    2. Каждый регион префиксует свои id: tile- / rail- / card-.
@@ -102,6 +102,8 @@
   function adLine(offer, cls) {
     var parts = ['Реклама'];
     if (offer.advertiser) parts.push(offer.advertiser);
+    /* партнёрка ещё не выдала erid — честно пишем, что маркер уточняется */
+    if (!offer.erid) return el('p', { class: cls, text: parts.join(' · ') + ' · erid уточняется' });
     return el('p', { class: cls }, [
       parts.join(' · ') + ' · erid: ',
       el('span', { translate: 'no', text: offer.erid })
@@ -112,7 +114,8 @@
   var ICONS = {
     flame: 'M12 2.5c2.2 3 3 4.7 3 6.3 0 1.3-.8 2.2-1.9 2.2-1 0-1.7-.7-1.7-1.9 0-.7.2-1.3.2-1.8C9.4 8.9 7.5 11.4 7.5 14a4.5 4.5 0 0 0 9 0c0-4-2-7.4-4.5-11.5z',
     percent: 'M6.5 5a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zm11 8.4a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zM19 5.6 6.4 19',
-    bolt: 'M13.5 2 5 13.4h5.3L9.8 22l8.7-11.6h-5.4z'
+    bolt: 'M13.5 2 5 13.4h5.3L9.8 22l8.7-11.6h-5.4z',
+    case: 'M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3.5 7h17v11a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18zM3.5 12h17'
   };
   function tileIcon(name) {
     var d = ICONS[name]; if (!d) return null;
@@ -121,9 +124,10 @@
     svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('focusable', 'false');
     var path = document.createElementNS(SVG, 'path');
     path.setAttribute('d', d);
-    if (name === 'percent') {
+    if (name === 'percent' || name === 'case') {           /* контурные иконки */
       path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor');
       path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
     } else {
       path.setAttribute('fill', 'currentColor');
     }
@@ -244,10 +248,11 @@
       var q = new URLSearchParams(location.search);
       var cat = q.get('cat');  if (cat && CAT_IDS.indexOf(cat) > -1) state.cat = cat;
       var bank = q.get('bank'); if (bank) state.bank = bank;
-      var goal = q.get('goal'); if (goal && (goal === 'all' || TAG_IDS.indexOf(goal) > -1)) state.goal = goal;
+      var alias = function (t) { return t === 'fast' ? 'online' : t; };   // старые ссылки с ?goal=fast
+      var goal = alias(q.get('goal')); if (goal && (goal === 'all' || TAG_IDS.indexOf(goal) > -1)) state.goal = goal;
       var sort = q.get('sort'); if (sort && ['popular', 'free', 'bank'].indexOf(sort) > -1) state.sort = sort;
       var tags = q.get('tags');
-      if (tags) state.tags = tags.split(',').filter(function (t) { return TAG_IDS.indexOf(t) > -1; });
+      if (tags) state.tags = tags.split(',').map(alias).filter(function (t) { return TAG_IDS.indexOf(t) > -1; });
     } catch (e) { /* дефолты */ }
   }
 
@@ -391,12 +396,13 @@
   /* ---------- статичные блоки ---------- */
 
   (function () {                       // селект банков
-    var sel = document.getElementById('f-bank'), seen = {};
+    var sel = document.getElementById('f-bank'), seen = {}, banks = [];
     D.offers.forEach(function (o) {
       if (seen[o.bank]) return;
-      seen[o.bank] = true;
-      sel.appendChild(el('option', { value: o.bank, text: o.bank }));
+      seen[o.bank] = true; banks.push(o.bank);
     });
+    banks.sort(function (a, b) { return a.localeCompare(b, 'ru'); });   // 20 офферов — по алфавиту искать проще
+    banks.forEach(function (b) { sel.appendChild(el('option', { value: b, text: b })); });
   })();
 
   (function () {                       // чипсы
@@ -615,9 +621,9 @@
         busy = false;
         btn.removeAttribute('aria-disabled');
         try {
-          var box = JSON.parse(localStorage.getItem('kartsales:subs') || '[]');
+          var box = JSON.parse(localStorage.getItem('finsales:subs') || '[]');
           box.push({ email: v, at: new Date().toISOString() });
-          localStorage.setItem('kartsales:subs', JSON.stringify(box));
+          localStorage.setItem('finsales:subs', JSON.stringify(box));
         } catch (err) { /* приватный режим — не критично */ }
         okBox.textContent = 'Готово. Мы написали на ' + v + ' — подтвердите подписку в письме.';
         form.reset();

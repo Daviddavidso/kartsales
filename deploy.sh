@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Заливка КАРТСЕЙЛС на хостинг клиента по FTP.
+# Заливка ФИНСЕЙЛС (число.online) на хостинг клиента по FTP.
 # Доступы лежат отдельно от проекта: ~/.kartsales-ftp (не попадают в репозиторий).
 #
 #   bash deploy.sh          — залить всё
@@ -16,7 +16,7 @@ source "$CREDS"
 : "${FTP_USER:?не задан FTP_USER}"
 : "${FTP_PASS:?не задан FTP_PASS}"
 if [ -z "${FTP_DIR:-}" ]; then
-  echo "FTP_DIR пуст. Клиент ещё не назвал домен — открой $CREDS и впиши путь вида /www/domain.ru"
+  echo "FTP_DIR пуст. Открой $CREDS и впиши путь вида /www/xn--h1agjk2a.online"
   exit 1
 fi
 
@@ -43,15 +43,23 @@ if [ "${1:-}" = "--list" ]; then
   exit 0
 fi
 
-for f in "${FILES[@]}"; do
-  [ -f "$f" ] || { echo "ПРОПУЩЕН (нет файла): $f"; continue; }
-  echo "→ $f"
-  # --ftp-create-dirs создаёт css/ и js/ на той стороне
-  curl --silent --show-error --fail \
-       --ftp-create-dirs \
-       --user "$FTP_USER:$FTP_PASS" \
-       --upload-file "$f" \
-       "ftp://$FTP_HOST$FTP_DIR/$f"
+# Панель reg.ru создала две папки под один домен: punycode и кириллическую.
+# Какая из них отдаётся вебом — зависит от настроек хостинга, поэтому льём в обе.
+DIRS=("$FTP_DIR")
+[ -n "${FTP_DIR_ALT:-}" ] && DIRS+=("$FTP_DIR_ALT")
+
+for dir in "${DIRS[@]}"; do
+  echo "== $dir"
+  for f in "${FILES[@]}"; do
+    [ -f "$f" ] || { echo "ПРОПУЩЕН (нет файла): $f"; continue; }
+    echo "→ $f"
+    # --ftp-create-dirs создаёт css/ и js/ на той стороне; путь кодируем (кириллица в имени папки)
+    curl --silent --show-error --fail \
+         --ftp-create-dirs \
+         --user "$FTP_USER:$FTP_PASS" \
+         --upload-file "$f" \
+         "ftp://$FTP_HOST$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$dir/$f")"
+  done
 done
 
 echo

@@ -1,5 +1,5 @@
 /* ============================================================
-   КАРТСЕЙЛС — стили
+   ФИНСЕЙЛС — стили
    Палитра и геометрия сняты с живого aviasales.ru.
    Где оригинал не проходит контраст WCAG AA — взят ближайший
    тон, который проходит (подробности в README).
@@ -28,6 +28,7 @@
   --coral:#f77482;
   --mint:#cdeedd;
   --lilac:#e3ddfb;
+  --sand:#fde9b4;           /* плитка РКО; чернила на ней 15,5:1 */
   --dark:#331810;
   --dark-ink:#f6ebe4;
 
@@ -243,6 +244,7 @@ html.is-locked{overflow:hidden}
 .tile--peach{background:var(--peach)}
 .tile--sky{background:var(--sky)}
 .tile--coral{background:var(--coral)}
+.tile--mint{background:var(--mint)}
 .tile--dark{background:var(--dark);color:var(--dark-ink)}
 
 .tile__head{position:relative;padding-inline-end:76px}
@@ -366,6 +368,7 @@ html.is-locked{overflow:hidden}
 .cat--debit{background:var(--sky)}
 .cat--deposit{background:var(--mint)}
 .cat--loan{background:var(--lilac)}
+.cat--business{background:var(--sand)}
 .cat__title{font-size:20px}
 .cat__title a{display:inline-block;padding-block:4px;color:var(--ink);text-decoration:none}
 .cat__title a::after{content:"";position:absolute;inset:0;border-radius:var(--r)}
